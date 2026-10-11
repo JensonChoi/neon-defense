@@ -1,3 +1,5 @@
+import { DIFFICULTY_PROFILES } from './difficulty.ts';
+import type { Difficulty } from './difficulty.ts';
 import type { EnemyKind } from './config.ts';
 export type Spawn = {
     at: number;
@@ -17,8 +19,10 @@ const COMPOSITIONS: [
     [30, 22, 14, 16], [26, 26, 16, 18], [34, 24, 18, 18], [30, 28, 20, 20], [36, 30, 22, 22],
 ];
 export const WAVE_NAMES = ['First contact', 'Steel footsteps', 'Signal interference', 'Heavy industry', 'The gatekeeper', 'Ghost protocol', 'Crossfire', 'Pressure system', 'Blackout warning', 'Siege engine', 'Neural storm', 'Broken skyline', 'Hostile network', 'Terminal velocity', 'The destroyer', 'Zero hour', 'City under fire', 'Critical mass', 'Last transmission', 'The final light'];
-export function makeWave(wave: number): Spawn[] {
-    const c = COMPOSITIONS[wave - 1];
+export function makeWave(wave: number, difficulty: Difficulty = 'medium'): Spawn[] {
+    const composition = COMPOSITIONS[wave - 1];
+    const quantity = DIFFICULTY_PROFILES[difficulty].quantity;
+    const c = composition?.map(count => Math.ceil(count * quantity));
     if (!c)
         return [];
     const lanes = wave < 3 ? 1 : wave < 7 ? 2 : 3;
@@ -33,7 +37,7 @@ export function makeWave(wave: number): Spawn[] {
                 ordered.push(kinds[k]);
                 left[k]--;
             }
-    const spawns = ordered.map((kind, i) => ({ kind, at: i * Math.max(0.32, 1.05 - wave * 0.035), route: i % lanes }));
+    const spawns = ordered.map((kind, i) => ({ kind, at: i * Math.max(0.32, 1.05 - wave * 0.035) / quantity, route: i % lanes }));
     if (wave % 5 === 0)
         spawns.push({ kind: 'boss', at: 6, route: wave === 5 ? 0 : 2 });
     return spawns.sort((a, b) => a.at - b.at);

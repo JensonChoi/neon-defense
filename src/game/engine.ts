@@ -1,3 +1,5 @@
+import { DIFFICULTY_PROFILES } from './difficulty.ts';
+import type { Difficulty } from './difficulty.ts';
 import {damageAfterShield,targetsInRange,intersectsShot} from './combat.ts';
 import {moveProjectile} from './projectiles.ts';
 import { ENEMIES, TOWERS } from './config.ts';
@@ -53,6 +55,8 @@ export type Snapshot = {
     paused: boolean;
     credits: number;
     hp: number;
+    maxHp: number;
+    difficulty: Difficulty;
     wave: number;
     remaining: number;
     queued: number;
@@ -69,6 +73,9 @@ export class Game {
     phase: Phase = 'menu';
     paused = false;
     credits = 350;
+    private selectedDifficulty: Difficulty = 'medium';
+    get difficulty(): Difficulty { return this.selectedDifficulty; }
+    get maxHp(): number { return DIFFICULTY_PROFILES[this.difficulty].reactorHp; }
     hp = 20;
     wave = 0;
     kills = 0;
@@ -94,8 +101,8 @@ export class Game {
     constructor() { this.publish(); }
     subscribe = (listener: () => void) => { this.listeners.add(listener); return () => this.listeners.delete(listener); };
     getSnapshot = () => this.snapshot;
-    publish() { this.snapshot = { phase: this.phase, paused: this.paused, credits: this.credits, hp: this.hp, wave: this.wave, remaining: this.enemies.length + this.queue.length, queued: this.queue.length, kills: this.kills, countdown: this.countdown, hold: this.hold, speed: this.speed, towers: this.towers.map(t => ({ ...t })), selected: this.selected, notice: this.notice, revision: ++this.revision }; this.listeners.forEach(f => f()); }
-    reset() { this.phase = 'preparation'; this.paused = false; this.credits = 350; this.hp = 20; this.wave = 0; this.kills = 0; this.countdown = 15; this.hold = true; this.speed = 1; this.time = 0; this.enemies = []; this.towers = []; this.projectiles = []; this.effects = []; this.queue = []; this.selected = null; this.accumulator = 0; this.notice = 'Build near the first entrance, then start the wave.'; this.publish(); }
+    publish() { this.snapshot = { phase: this.phase, paused: this.paused, credits: this.credits, hp: this.hp, maxHp: this.maxHp, difficulty: this.difficulty, wave: this.wave, remaining: this.enemies.length + this.queue.length, queued: this.queue.length, kills: this.kills, countdown: this.countdown, hold: this.hold, speed: this.speed, towers: this.towers.map(t => ({ ...t })), selected: this.selected, notice: this.notice, revision: ++this.revision }; this.listeners.forEach(f => f()); }
+    reset(difficulty: Difficulty = this.difficulty) { this.selectedDifficulty = difficulty; this.phase = 'preparation'; this.paused = false; this.credits = 350; this.hp = this.maxHp; this.wave = 0; this.kills = 0; this.countdown = 15; this.hold = true; this.speed = 1; this.time = 0; this.enemies = []; this.towers = []; this.projectiles = []; this.effects = []; this.queue = []; this.selected = null; this.accumulator = 0; this.notice = 'Build near the first entrance, then start the wave.'; this.publish(); }
     select(pad: number | null) { this.selected = pad; this.publish(); }
     editable() { return this.phase === 'preparation' || this.phase === 'combat'; }
     build(kind: TowerKind, pad = this.selected): boolean { if (!this.editable() || pad === null || !PADS[pad] || this.towers.some(t => t.pad === pad) || this.credits < TOWERS[kind].cost)
@@ -106,7 +113,7 @@ export class Game {
     sell(pad = this.selected): boolean { const t = this.towers.find(t => t.pad === pad); if (!this.editable() || !t)
         return false; this.credits += sellValue(t.invested); this.towers = this.towers.filter(x => x !== t); this.notice = 'Tower recycled. Credits returned.'; this.publish(); return true; }
     startWave() { if (this.phase !== 'preparation' || this.paused)
-        return; this.wave++; this.phase = 'combat'; this.queue = makeWave(this.wave); this.waveTime = 0; this.notice = this.wave % 5 === 0 ? 'WARNING: Boss signature detected. Watch for EMP pulses.' : `Wave ${this.wave} inbound. Defend the reactor.`; this.publish(); }
+        return; this.wave++; this.phase = 'combat'; this.queue = makeWave(this.wave, this.difficulty); this.waveTime = 0; this.notice = this.wave % 5 === 0 ? 'WARNING: Boss signature detected. Watch for EMP pulses.' : `Wave ${this.wave} inbound. Defend the reactor.`; this.publish(); }
     setSpeed(speed: number) { if ([1, 2, 3].includes(speed)) {
         this.speed = speed;
         this.publish();
@@ -117,7 +124,7 @@ export class Game {
     emit(type: Effect['type'], from: Vec, to: Vec, color: string, value?: number, radius?: number) { if (this.effects.length < 240)
         this.effects.push({ id: this.nextId++, type, from: { ...from }, to: { ...to }, color, value, radius }); }
     drainEffects() { const effects = this.effects; this.effects = []; return effects; }
-    spawn(kind: EnemyKind, route: number) { const base = ENEMIES[kind]; const scale = 1 + .12 * (this.wave - 1); const hp = kind === 'boss' ? [1000, 1800, 2800, 4000][Math.max(0, Math.floor(this.wave / 5) - 1)] : base.hp * scale; const e: Enemy = { id: this.nextId++, kind, hp, maxHp: hp, shield: base.shield * scale, maxShield: base.shield * scale, route, progress: 0, ...positionOnRoute(route, 0), slow: 0, slowUntil: 0, empAt: this.time + 8, warned: false }; this.enemies.push(e); return e; }
+    spawn(kind: EnemyKind, route: number) { const base = ENEMIES[kind]; const scale = 1 + .12 * (this.wave - 1); const health = DIFFICULTY_PROFILES[this.difficulty].health; const hp = (kind === 'boss' ? [1000, 1800, 2800, 4000][Math.max(0, Math.floor(this.wave / 5) - 1)] : base.hp * scale) * health; const e: Enemy = { id: this.nextId++, kind, hp, maxHp: hp, shield: base.shield * scale * health, maxShield: base.shield * scale * health, route, progress: 0, ...positionOnRoute(route, 0), slow: 0, slowUntil: 0, empAt: this.time + 8, warned: false }; this.enemies.push(e); return e; }
     damage(enemy: Enemy, amount: number, ignoreArmor = false) {
         if (enemy.hp <= 0 || !this.enemies.includes(enemy))
             return;

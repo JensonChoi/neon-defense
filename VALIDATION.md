@@ -1,5 +1,22 @@
 # Validation record
 
+## Campaign difficulty — 2026-10-11
+
+- All **41 deterministic simulation tests passed**, including explicit Easy baseline coverage, all four profiles, count rounding, ordered formations, lane progression, unchanged boss timing/routes, health and shield scaling, reactor capacity, restart retention, and lethal-breach accounting. Strict TypeScript checking and the production build passed. Vite retains its existing large-chunk warning (approximately 799 kB). Local verification used Node 26.11.0 and installed dependencies.
+- Twelve scripted campaigns used the same three mixed-tower strategies, starting credits, earned kill/wave rewards, and preparation-only purchases. Results below are simulation evidence, not human playtesting or measured difficulty guarantees. Higher enemy quantities also grant more total kill income.
+
+| Difficulty | Strategy 1 | Strategy 2 | Strategy 3 | Final kills / credits for victories |
+| --- | --- | --- | --- | --- |
+| Easy | Victory, 20 HP | Victory, 20 HP | Victory, 20 HP | 1073 / 3564 |
+| Medium | Victory, 20 HP | Victory, 20 HP | Victory, 20 HP | 1315 / 6964 |
+| Hard | Victory, 20 HP | Victory, 20 HP | Victory, 20 HP | 1529 / 9920 |
+| Hardcore | Victory, 2 HP | Defeat, wave 3 | Victory, 2 HP | 1736 / 12796 |
+
+- Hardcore strategy 2 ended with 58 kills and 283 credits. A viable earned-credit strategy is retained on every difficulty, with all three original Easy victories preserved.
+- All **11 Playwright scenarios passed** locally in 2 minutes, covering all selector options, persistence, default/invalid selection, campaign locking, pause/result restarts, separate best scores, legacy migration, and Hardcore showing 100% at 10/10 HP. The first run was interrupted by a development hot reload during a source edit; the clean run passed without retries.
+- Visually inspected the [menu](docs/screenshots/difficulty-menu.png) and [Hardcore HUD](docs/screenshots/hardcore-hud.png) at 1440×900. The selector, launch button, integrity display, and campaign difficulty labels fit without overlap. Larger/smaller viewports were not visually inspected.
+- Manual full-campaign browser playtesting and performance profiling remain unverified.
+
 ## CI browser timeout fix — 2026-10-11
 
 - GitHub-hosted runs failed all five browser tests at the 30-second limit. Four tests waited to click the intro skip button after it had automatically detached. Startup now waits for the intro button to disappear, covering automatic completion without racing its short lifetime.
