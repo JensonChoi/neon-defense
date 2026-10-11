@@ -1,5 +1,11 @@
 # Validation record
 
+## CI browser timeout fix — 2026-10-11
+
+- GitHub-hosted runs failed all five browser tests at the 30-second limit. Four tests waited to click the intro skip button after it had automatically detached. Startup now waits for the intro button to disappear, covering automatic completion without racing its short lifetime.
+- Browser contexts initially use Low quality while preserving persisted settings on reload; the settings scenario still switches to High quality. Linux launches explicitly use SwiftShader for software WebGL. Test and assertion budgets are 60 and 10 seconds respectively; failures remain deployment-blocking without retries.
+- After these changes, all five browser scenarios passed locally in 56 seconds; all 26 simulation tests and the type-checked production build passed. Local macOS execution does not exercise Linux SwiftShader. Hosted CI results are tracked on PR #1; actual Pages deployment remains unverified.
+
 ## CI/CD verification — 2026-10-10
 
 - `npm test`: all **26 simulation tests passed** on macOS with Node.js 26.11.0, including a new regression test for the exact 70% refund on a once-upgraded laser turret. The first browser run exposed floating-point rounding that returned 118 rather than 119 credits; the refund calculation now multiplies by 7 before dividing by 10.

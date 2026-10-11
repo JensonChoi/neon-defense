@@ -1,5 +1,20 @@
 import { test, expect } from '@playwright/test';
-async function start(page: import('@playwright/test').Page) { await page.goto('/?test=1'); await page.getByRole('button', { name: 'INITIALIZE DEFENSE' }).click(); await page.getByRole('button', { name: 'SKIP INTRO' }).click(); await expect(page.getByText('Build your defense.')).toBeVisible(); }
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    // Keep rendering affordable on software GPUs; preserve settings on reload.
+    if (!localStorage.getItem('neon-settings')) {
+      localStorage.setItem('neon-settings', JSON.stringify({ quality: 'low' }));
+    }
+  });
+});
+async function start(page: import('@playwright/test').Page) {
+  await page.goto('/?test=1');
+  await page.getByRole('button', { name: 'INITIALIZE DEFENSE' }).click();
+  // The intro expires after 2.2 seconds, so its skip button may disappear
+  // while Playwright waits for a stable frame on a software renderer.
+  await expect(page.getByRole('button', { name: 'SKIP INTRO' })).toBeHidden();
+  await expect(page.getByText('Build your defense.')).toBeVisible();
+}
 async function selectPad(page: import('@playwright/test').Page, pad: number) { const point = await page.evaluate(p => (window as any).__NEON_TEST__.padPosition(p), pad); await page.mouse.click(point.x, point.y); await expect(page.getByText(`SITE ${String(pad + 1).padStart(2, '0')}`, { exact: true })).toBeVisible(); }
 test('construction, upgrades and recycling through the HUD', async ({ page }) => { const errors: string[] = []; page.on('pageerror', e => errors.push(e.message)); await start(page); await selectPad(page, 3); await page.getByRole('button', { name: 'DEPLOY LASER TURRET' }).click(); await expect(page.getByText('LEVEL 1', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'UPGRADE · 70 CR' }).click(); await expect(page.getByText('LEVEL 2', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'RECYCLE TOWER' }).click(); await expect(page.getByText('Build your defense.')).toBeVisible(); expect(await page.evaluate(() => (window as any).__NEON_TEST__.game.credits)).toBe(299); expect(errors).toEqual([]); });
 test('manual wave start, pause/resume, speed and real-time attacks', async ({ page }) => { await start(page); await selectPad(page, 1); await page.getByRole('button', { name: 'DEPLOY LASER TURRET' }).click(); await page.getByRole('button', { name: 'START WAVE 01' }).click(); await page.getByRole('button', { name: 'Game speed 3x' }).click(); await expect.poll(() => page.evaluate(() => (window as any).__NEON_TEST__.game.kills), { timeout: 20000 }).toBeGreaterThan(0); await page.getByRole('button', { name: 'Pause', exact: true }).click(); const before = await page.evaluate(() => (window as any).__NEON_TEST__.game.time); await page.waitForTimeout(250); expect(await page.evaluate(() => (window as any).__NEON_TEST__.game.time)).toBe(before); await page.getByRole('button', { name: 'RESUME DEFENSE' }).click(); await expect.poll(() => page.evaluate(() => (window as any).__NEON_TEST__.game.time)).toBeGreaterThan(before); });
