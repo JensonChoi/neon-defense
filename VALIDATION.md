@@ -1,5 +1,15 @@
 # Validation record
 
+## CI/CD verification — 2026-10-10
+
+- `npm test`: all **26 simulation tests passed** on macOS with Node.js 26.11.0, including a new regression test for the exact 70% refund on a once-upgraded laser turret. The first browser run exposed floating-point rounding that returned 118 rather than 119 credits; the refund calculation now multiplies by 7 before dividing by 10.
+- `npm run build -- --base=/neon-defense/`: strict TypeScript checking and the complete Vite production build passed using installed dependencies. Generated HTML references the script, stylesheet, and favicon under `/neon-defense/`. Vite reports a bundle-size warning for the approximately 796 kB JavaScript chunk; this is not a build failure.
+- After installing Playwright Chromium and allowing local server/browser execution outside the sandbox, `npm run test:e2e`: all **5 browser scenarios passed** in 1.4 minutes. This supersedes the earlier browser execution limitation below.
+- Workflow YAML parsed successfully and its triggers/job structure were checked; `git diff --check` passed. CI selects Node 24 from `.nvmrc`; local verification used Node 26 and existing dependencies, rather than a fresh `npm ci` installation.
+- The GitHub-hosted workflow and actual Pages deployment have not been run. Pages must be configured to use GitHub Actions and the workflow merged into `main` before deployment. Manual full-campaign browser playtesting and performance profiling remain unverified.
+
+The following sections preserve the initial development record; installation, build, and browser limitations describe that earlier environment.
+
 ## Executed
 
 - **25 deterministic simulation tests passed** under Node.js 26.11.0 on macOS.

@@ -8,6 +8,14 @@ const run = (g: Game, seconds: number) => { for (let i = 0; i < seconds * 60; i+
     g.step(1 / 60);
     g.drainEffects();
 } };
+test('recycling a once-upgraded laser refunds exactly 70 percent', () => {
+  const game = new Game();
+  game.reset();
+  assert.equal(game.build('laser', 0), true);
+  assert.equal(game.upgrade(0), true);
+  assert.equal(game.sell(0), true);
+  assert.equal(game.credits, 299);
+});
 function combat() { const g = new Game(); g.reset(); g.phase = 'combat'; g.wave = 1; g.queue = [{ at: 9999, kind: 'scout', route: 0 }]; return g; }
 function at(g: Game, kind: Parameters<Game['spawn']>[0], progress: number, route = 0) { const e = g.spawn(kind, route); e.progress = progress; Object.assign(e, positionOnRoute(route, progress)); return e; }
 test('all routes are finite, continuous, and reach the same reactor', () => { ROUTES.forEach((r, i) => { assert.deepEqual(positionOnRoute(i, 0), r[0]); assert.deepEqual(positionOnRoute(i, LENGTHS[i] + 1), { x: 13, z: 10 }); let last = r[0]; for (let d = .1; d <= LENGTHS[i]; d += .1) {

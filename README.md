@@ -31,6 +31,20 @@ The Playwright suite starts Vite automatically, or reuses an existing server on 
 
 No backend, API keys, external models, textures, fonts, or runtime network requests are required. All game assets are procedural. npm registry access is needed for the initial installation.
 
+## Deploy with GitHub Actions
+
+The [CI and GitHub Pages workflow](.github/workflows/ci-cd.yml) runs on pushes and pull requests. It installs locked dependencies with Node 24, runs simulation and Chromium browser tests, and type-checks and builds the production site. Failed runs retain available browser diagnostics for seven days.
+
+To enable deployment:
+
+1. In the repository's **Settings → Pages → Build and deployment**, set **Source** to **GitHub Actions**.
+2. Merge this workflow into `main` and push changes to `main`. Deployment runs only after validation succeeds.
+3. Open **Actions → CI and GitHub Pages** to monitor the run. The deployment job links to the published site, normally **https://jensonchoi.github.io/neon-defense/**.
+
+Once the workflow exists on `main`, you can also select **Run workflow** in Actions with branch `main` to redeploy. Manual runs on other branches validate without publishing. No personal access token or repository secrets are needed; deployment uses the workflow's scoped GitHub token and the `github-pages` environment. Any environment approval rules still apply.
+
+The deployment build takes its asset base path from GitHub Pages metadata, supporting repository URLs and configured custom domains. For a local production preview at the repository path, run `npm run build -- --base=/neon-defense/`, then `npm run preview`, and visit `/neon-defense/` on the preview server.
+
 ## How to play
 
 - Begin with **350 credits** and **20 reactor HP**. Survive **20 waves** to win.
