@@ -47,7 +47,7 @@ The deployment build takes its asset base path from GitHub Pages metadata, suppo
 
 ## How to play
 
-- Begin with **350 credits** and **20 reactor HP**. Survive **20 waves** to win.
+- Begin with **350 credits** and **20 reactor HP** (10 on Hardcore). Survive **20 waves** to win.
 - Click a **hexagonal build site**, select a tower, and press **Deploy**. There are 24 sites.
 - Click an existing tower to buy up to **three upgrades**, inspect its range, or recycle it for **70% of invested credits**.
 - Earn credits from kills and `40 + 5 × wave` credits for clearing each wave.
@@ -66,6 +66,21 @@ The deployment build takes its asset base path from GitHub Pages metadata, suppo
 Each upgrade improves damage, range, and attack rate. Missile splash, Tesla chain count, and Cryo slow strength also increase. Cryo slows use the strongest field; they do not multiply. Shields absorb incoming damage before health; armor reduces health damage.
 
 **First-wave advice:** Place laser turrets along the road near entrance 01, particularly the sites beside its first turn. Add a central defense before entrance 02 opens on wave 3 and entrance 03 opens on wave 7. Group-control towers work well with Cryo; Railguns are especially useful along straight roads and against armored mechs.
+
+## Campaign difficulty
+
+Select Easy, Medium, Hard, or Hardcore in the main menu before initializing defense. New players and invalid stored selections default to Medium. Selection persists separately from graphics settings, stays locked for the campaign, and is retained on restart. Return to the main menu to choose another level.
+
+| Difficulty | Enemy quantity | Enemy HP and shields | Reactor HP |
+| --- | ---: | ---: | ---: |
+| Easy | 1× | 1× | 20 |
+| Medium | 1.2× | 1.35× | 20 |
+| Hard | 1.4× | 1.75× | 20 |
+| Hardcore | 1.6× | 2.25× | 10 |
+
+Easy preserves the original campaign. Each nonzero regular-enemy count rounds up after scaling; spawn intervals shrink by the quantity multiplier. Each fifth wave still has one boss at its original time and route. Health and shields scale after wave scaling, including bosses. Credits, rewards, towers, speed, armor, EMPs, and breach damage stay the same. These are initial balance values, not measured difficulty guarantees.
+
+Personal bests use the same score formula and are stored separately for each difficulty. The legacy score migrates to Easy without replacing a higher Easy best. Campaigns are not saved.
 
 ## Controls
 

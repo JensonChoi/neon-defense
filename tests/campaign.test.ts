@@ -1,12 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Game } from '../src/game/engine.ts';
+import type { Difficulty } from '../src/game/difficulty.ts';
 import type { TowerKind } from '../src/game/config.ts';
 import { upgradeCost } from '../src/game/economy.ts';
 // A reproducible strategy using only earned credits; deliberately no combat-time purchases.
-export function campaign(variant = 0) {
+export function campaign(variant = 0, difficulty: Difficulty = 'easy') {
     const g = new Game();
-    g.reset();
+    g.reset(difficulty);
     const plan: [
         number,
         TowerKind
@@ -50,10 +51,17 @@ export function campaign(variant = 0) {
 }
 for (let variant = 0; variant < 3; variant++)
     test(`earned-credit mixed strategy ${variant + 1} completes the campaign`, () => { const { g, log } = campaign(variant); assert.equal(g.phase, 'victory', JSON.stringify(log)); assert.ok(g.hp > 0); });
-test('building no towers results in defeat', () => { const g = new Game(); g.reset(); for (let wave = 0; wave < 20 && g.phase !== 'defeat'; wave++) {
+test('building no towers results in defeat', () => { const g = new Game(); g.reset('easy'); for (let wave = 0; wave < 20 && g.phase !== 'defeat'; wave++) {
     g.startWave();
     for (let i = 0; i < 12000 && g.phase === 'combat'; i++) {
         g.step(1 / 60);
         g.drainEffects();
     }
 } assert.equal(g.phase, 'defeat'); });
+
+for (const difficulty of ['medium', 'hard', 'hardcore'] as const)
+    test(`earned-credit strategy remains viable on ${difficulty}`, () => {
+        const { g, log } = campaign(0, difficulty);
+        assert.equal(g.phase, 'victory', JSON.stringify(log));
+        assert.ok(g.hp > 0);
+    });
